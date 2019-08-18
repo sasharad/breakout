@@ -1,0 +1,22 @@
+canvas{
+
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+.but{
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-around;
+  flex-direction: row;
+}
+
+.but1{
+  width: 200px;
+  border-radius: 2px;
+  border-style: double;
+  border-color: grey;
+  text-align: center;
+  border-radius: 10px
+}
