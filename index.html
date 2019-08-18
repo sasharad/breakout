@@ -259,6 +259,9 @@
           if (this === particles[i]) continue;
           if (distance(this.x, this.y, BallX, BallY) - this.radius < 1 / 2) {
             this.x += width * 2;
+            if(score > 9){
+              gameWin()
+            }
             score++
             BallYSpeed = -BallYSpeed;
           }
@@ -276,9 +279,6 @@
     function init() {
       particles = []
       for (let i = 0; i < 10; i++) {
-        if (i === 10) {
-          gameWin();
-        }
         const radius = 10;
         let x = randomIntFromRange(radius, width - radius);
         let y = randomIntFromRange(radius, height / 2 - radius);
