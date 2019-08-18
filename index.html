@@ -9,10 +9,10 @@
 
     <canvas id="canvas" width="400" height="400"></canvas>
     <div class="but">
-      <div id="but1" onmousedown="mouseDown1()" onmouseup = "mouseUp()" class="but1">
+      <div id="but1" class="but1">
         <p>right</p>
       </div>
-      <div id="but2" onmousedown="mouseDown2()" onmouseup = "mouseUp()" class="but1">
+      <div id="but2" class="but1">
         <p>left</p>
       </div>
     </div>
@@ -139,27 +139,13 @@
           this.draw()
       }
 
-      // var moveSensor1 = function (){
-      //   direction = 1
-      // }
-
-
-      // var moveSensor2 = function (){
-      //   direction = 2
-      // }
-
-      function mouseDown1(){
-        document.getElementById("but1").style.color = "red";
+      var moveSensor1 = function (){
         direction = 1
       }
 
-      function mouseDown2() {
-          document.getElementById("but1").style.color = "red";
-          direction = 2;
-        }
 
-      function mouseUp() {
-        direction = 0
+      var moveSensor2 = function (){
+        direction = 2
       }
 
       Ball.prototype.move = function(){
@@ -422,8 +408,8 @@
         direction = keyActions[event.keyCode]
       })
 
-      // $("#but1").click(moveSensor1)
-      // $("#but2").click(moveSensor2)
+      $("#but1").click(moveSensor1)
+      $("#but2").click(moveSensor2)
 
       var keyActions = {
         37: 1,
