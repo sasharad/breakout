@@ -1,432 +1,342 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-        <link href="style.css" rel="stylesheet">
-    <title></title>
-  </head>
-  <body>
 
-    <canvas id="canvas" width="400" height="400"></canvas>
-    <div class="but">
-      <div id="but1" onmousedown="mouseDown1()" onmouseup = "mouseUp()" class="but1">
-      </div>
-      <div id="but2" onmousedown="mouseDown2()" onmouseup = "mouseUp()" class="but1">
-      </div>
-    </div>
-    <script src="https://code.jquery.com/jquery-2.1.0.js"></script>
+<head>
+  <meta charset="utf-8">
+  <link href="style.css" rel="stylesheet">
+  <title></title>
+</head>
 
-    <script>
+<body>
 
+  <canvas id="canvas" width="400" height="400"></canvas>
+  <div class="but">
+    <div id="but1" class="but1"></div>
+    <div id="but2" class="but1"></div>
+  </div>
+  <script src="https://code.jquery.com/jquery-2.1.0.js"></script>
+
+  <script>
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d");
-
     var width = canvas.width;
     var height = canvas.height;
-
     var direction = 0
-
     var pongProces = true
-
     var score = 0;
-
     const colors = ['#2185C5', '#7ECEFD', '#FF7F66']
-
-      var Ball = function (){
-        BallX = 170;
-        BallY = 300;
-        BallXSpeed = 0;
-        BallYSpeed = 0;
+    var Ball = function () {
+      BallX = 170;
+      BallY = 300;
+      BallXSpeed = 1;
+      BallYSpeed = 2;
+    }
+    var Block = function () {
+      BlockX = 200;
+      BlockY = height - 10;
+      BlockXspeed = 0;
+      BlockYspeed = 0;
+    }
+    var Pong = function (x, y) {
+      this.x = x;
+      this.y = y;
+    };
+    var circle = function (x, y, radius, filin) {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+      if (filin) {
+        ctx.fill();
+      } else {
+        ctx.stroke();
       }
-
-      var Block = function() {
-        BlockX = 200;
-        BlockY = height - 10;
-        BlockXspeed = 0;
-        BlockYspeed = 0;
+    }
+    var drawBorder = function () {
+      ctx.strokeRect(0, 0, width, height)
+    }
+    var timeoutId = function () {
+      if (proccess) {
+        setTimeout(gameLoop, 5)
       }
-
-      var Pong = function (x, y) {
-        this.x = x;
-        this.y = y;
-      };
-
-      var circle = function(x, y, radius, filin){
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2, false);
-        if (filin){
-          ctx.fill();
-        } else {
-          ctx.stroke();
+    }
+    var gameWin = function () {
+      proccess = false
+      ctx.font = "40px Courier";
+      ctx.fillStyle = "Black";
+      ctx.textAllign = "center";
+      ctx.textBaseLine = "middle";
+      ctx.fillText("You win" + score, width, height / 2);
+    }
+    var get_distance = function (x1, y1, x2, y2) {
+      var xDistance = x2 - x1;
+      var yDistance = y2 - y1;
+      return Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2))
+    }
+    var drawScore = function () {
+      ctx.font = "20px Courier";
+      ctx.fillStyle = "Blue";
+      ctx.textAllign = "left";
+      ctx.textBaseLine = "top";
+      ctx.fillText("Рахунок: " + score, 10, 25);
+    };
+    function randomIntFromRange(min, max) {
+      return Math.floor(Math.random() * (max - min + 1) + min)
+    }
+    function randomColor(colors) {
+      return colors[Math.floor(Math.random() * colors.length)]
+    }
+    function distance(x1, y1, x2, y2) {
+      const xDist = x2 - x1
+      const yDist = y2 - y1
+      return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2))
+    }
+    Block.prototype.draw = function () {
+      ctx.fillStyle = "Black";
+      ctx.fillRect(BlockX, BlockY, 100, 10);
+    }
+    Ball.prototype.draw = function () {
+      ctx.fillStyle = "Black";
+      circle(BallX, BallY, 5, true);
+    }
+    Pong.prototype.draw = function () {
+      ctx.fillStyle = "Black";
+      ctx.fillRect(this.x, this.y, 100, 10);
+    }
+    Object.prototype.draw = function () {
+      ctx.beginPath()
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
+      ctx.fillStyle = this.color
+      ctx.fill()
+      ctx.closePath()
+    }
+    Object.prototype.update = function () {
+      this.draw()
+    }
+    var moveSensor1 = function () {
+      direction = 1
+    }
+    var moveSensor2 = function () {
+      direction = 2
+    }
+    Ball.prototype.move = function () {
+      BallX += BallXSpeed;
+      BallY += BallYSpeed;
+    }
+    Block.prototype.move = function () {
+      BlockX += BlockXspeed
+      BlockY += BlockYspeed
+      if (BlockX < 0) {
+        BlockX += 1;
+      }
+      if (BlockX > width - 100) {
+        BlockX -= 1;
+      }
+      if (direction === 1) {
+        BlockX -= 1;
+      } else if (direction === 2) {
+        BlockX += 1
+      }
+    }
+    Ball.prototype.checkCollisionBorders = function () {
+      if (BallX < 0 || BallX > width) {
+        BallXSpeed = -BallXSpeed;
+      }
+      if (BallY < 0) {
+        BallYSpeed = -BallYSpeed
+      }
+      if (BallY > height) {
+        gameOver()
+      }
+    }
+    Ball.prototype.checkCollisionBlock = function () {
+      for (var i = 0; i < 100; i++) {
+        if (get_distance(BlockX + i, BlockY, BallX, BallY) < 5) {
+          BallYSpeed = -BallYSpeed;
+          // BallXSpeed = -BallXSpeed
         }
       }
-
-      var drawBorder = function () {
-        ctx.strokeRect(0, 0, width, height)
-      }
-
-      var timeoutId = function () {
-        if (proccess) {
-          setTimeout(gameLoop, 5)
+    }
+    Pong.prototype.checkCollision = function () {
+      for (var i = 0; i < 100; i++) {
+        if (get_distance(this.x + i, this.y, BallX, BallY) < 7) {
+          BallYSpeed = -BallYSpeed;
+          pongProces = false;
         }
       }
-
-      var gameWin = function () {
-        proccess = false
-        ctx.font = "40px Courier";
-        ctx.fillStyle = "Black";
-        ctx.textAllign = "center";
-        ctx.textBaseLine = "middle";
-        ctx.fillText("You win" + score, width , height / 2);
-      }
-
-      var get_distance = function (x1, y1, x2, y2){
-        var xDistance = x2 - x1;
-        var yDistance = y2 - y1;
-        return Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2))
-      }
-
-      var drawScore = function(){
-        ctx.font = "20px Courier";
-        ctx.fillStyle = "Blue";
-        ctx.textAllign = "left";
-        ctx.textBaseLine = "top";
-        ctx.fillText("Рахунок: " + score, 10, 25);
-      };
-
-      function randomIntFromRange(min, max) {
-        return Math.floor(Math.random() * (max - min + 1) + min)
-      }
-
-      function randomColor(colors) {
-        return colors[Math.floor(Math.random() * colors.length)]
-      }
-
-
-      function distance(x1, y1, x2, y2) {
-        const xDist = x2 - x1
-        const yDist = y2 - y1
-
-        return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2))
-      }
-
-      Block.prototype.draw = function() {
-        ctx.fillStyle = "Black";
-        ctx.fillRect(BlockX, BlockY, 100, 10);
-      }
-
-      Ball.prototype.draw = function () {
-        ctx.fillStyle = "Black";
-        circle(BallX, BallY, 5, true);
-      }
-
-      Pong.prototype.draw = function () {
-        ctx.fillStyle = "Black";
-        ctx.fillRect(this.x, this.y, 100, 10);
-      }
-
-      Object.prototype.draw = function() {
-          ctx.beginPath()
-          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
-          ctx.fillStyle = this.color
-          ctx.fill()
-          ctx.closePath()
-      }
-
-      Object.prototype.update = function() {
-          this.draw()
-      }
-
-      // var moveSensor1 = function (){
-      //   direction = 1
-      // }
-
-
-      // var moveSensor2 = function (){
-      //   direction = 2
-      // }
-
-      function mouseDown1(){
-        document.getElementById("but1").style.color = "red";
-        direction = 1
-      }
-
-      function mouseDown2() {
-          document.getElementById("but1").style.color = "red";
-          direction = 2
-        }
-
-      function mouseUp() {
-        direction = 0
-      }
-
-      Ball.prototype.move = function(){
-        BallX += BallXSpeed;
-        BallY += BallYSpeed;
-      }
-
-      Block.prototype.move = function(){
-        BlockX += BlockXspeed
-        BlockY += BlockYspeed
-        if (BlockX < 0) {
-          BlockX += 1;
-        }
-        if (BlockX > width - 100) {
-          BlockX -= 1;
-        }
-        if (direction === 1) {
-          BlockX -= 1;
-        } else if (direction === 2) {
-          BlockX += 1 
-        }
-      }
-
-      Ball.prototype.checkCollisionBorders = function(){
-        if (BallX < 0 || BallX > width) {
-          BallXSpeed = -BallXSpeed;
-        }
-        if (BallY < 0) {
-          BallYSpeed = -BallYSpeed
-        }
-        if (BallY > height) {
-          gameOver()
-        }
-      }
-
-      Ball.prototype.checkCollisionBlock = function () {
-        for (var i = 0; i < 100; i++) {
-          if (get_distance(BlockX + i, BlockY, BallX, BallY) < 5){
-            BallYSpeed = -BallYSpeed;
-            // BallXSpeed = -BallXSpeed
-          }
-        }
-      }
-
-      Pong.prototype.checkCollision = function(){
-        for (var i = 0; i < 100; i++) {
-          if (get_distance(this.x + i, this.y, BallX, BallY) < 7){
-              BallYSpeed = -BallYSpeed;
-              pongProces = false;
-          }
-        }
-      }
-
-      /**
-   * Rotates coordinate system for velocities
-   *
-   * Takes velocities and alters them as if the coordinate system they're on was rotated
-   *
-   * @param  Object | velocity | The velocity of an individual particle
-   * @param  Float  | angle    | The angle of collision between two objects in radians
-   * @return Object | The altered x and y velocities after the coordinate system has been rotated
-   */
-
-  function rotate(velocity, angle) {
+    }
+    /**
+ * Rotates coordinate system for velocities
+ *
+ * Takes velocities and alters them as if the coordinate system they're on was rotated
+ *
+ * @param  Object | velocity | The velocity of an individual particle
+ * @param  Float  | angle    | The angle of collision between two objects in radians
+ * @return Object | The altered x and y velocities after the coordinate system has been rotated
+ */
+    function rotate(velocity, angle) {
       const rotatedVelocities = {
-          x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
-          y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
+        x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
+        y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
       };
-
       return rotatedVelocities;
-  }
-
-  /**
-   * Swaps out two colliding particles' x and y velocities after running through
-   * an elastic collision reaction equation
-   *
-   * @param  Object | particle      | A particle object with x and y coordinates, plus velocity
-   * @param  Object | otherParticle | A particle object with x and y coordinates, plus velocity
-   * @return Null | Does not return a value
-   */
-
-  function resolveCollision(particle, otherParticle) {
+    }
+    /**
+     * Swaps out two colliding particles' x and y velocities after running through
+     * an elastic collision reaction equation
+     *
+     * @param  Object | particle      | A particle object with x and y coordinates, plus velocity
+     * @param  Object | otherParticle | A particle object with x and y coordinates, plus velocity
+     * @return Null | Does not return a value
+     */
+    function resolveCollision(particle, otherParticle) {
       const xVelocityDiff = particle.velocity.x - otherParticle.velocity.x;
       const yVelocityDiff = particle.velocity.y - otherParticle.velocity.y;
-
       const xDist = otherParticle.x - particle.x;
       const yDist = otherParticle.y - particle.y;
-
       // Prevent accidental overlap of particles
       if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
-
-          // Grab angle between the two colliding particles
-          const angle = -Math.atan2(otherParticle.y - particle.y, otherParticle.x - particle.x);
-
-          // Store mass in var for better readability in collision equation
-          const m1 = particle.mass;
-          const m2 = otherParticle.mass;
-
-          // Velocity before equation
-          const u1 = rotate(particle.velocity, angle);
-          const u2 = rotate(otherParticle.velocity, angle);
-
-          // Velocity after 1d collision equation
-          const v1 = { x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y };
-          const v2 = { x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y };
-
-          // Final velocity after rotating axis back to original location
-          const vFinal1 = rotate(v1, -angle);
-          const vFinal2 = rotate(v2, -angle);
-
-          // Swap particle velocities for realistic bounce effect
-          particle.velocity.x = vFinal1.x;
-          particle.velocity.y = vFinal1.y;
-
-          otherParticle.velocity.x = vFinal2.x;
-          otherParticle.velocity.y = vFinal2.y;
+        // Grab angle between the two colliding particles
+        const angle = -Math.atan2(otherParticle.y - particle.y, otherParticle.x - particle.x);
+        // Store mass in var for better readability in collision equation
+        const m1 = particle.mass;
+        const m2 = otherParticle.mass;
+        // Velocity before equation
+        const u1 = rotate(particle.velocity, angle);
+        const u2 = rotate(otherParticle.velocity, angle);
+        // Velocity after 1d collision equation
+        const v1 = { x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y };
+        const v2 = { x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y };
+        // Final velocity after rotating axis back to original location
+        const vFinal1 = rotate(v1, -angle);
+        const vFinal2 = rotate(v2, -angle);
+        // Swap particle velocities for realistic bounce effect
+        particle.velocity.x = vFinal1.x;
+        particle.velocity.y = vFinal1.y;
+        otherParticle.velocity.x = vFinal2.x;
+        otherParticle.velocity.y = vFinal2.y;
       }
-  }
-
-      function Particle(x, y, radius, color) {
-          this.x = x
-          this.y = y
+    }
+    function Particle(x, y, radius, color) {
+      this.x = x
+      this.y = y
+      this.velocity = {
+        x: Math.random() - 0.5,
+        y: Math.random() - 0.5
+      }
+      this.mass = 1;
+      this.radius = radius
+      this.color = color
+      if (proccess === false) {
+        this.velocity = {
+          x: 0,
+          y: 0
+        }
+        return
+      }
+      this.update = function () {
+        this.draw();
+        if (proccess === false) {
           this.velocity = {
-            x: Math.random() - 0.5,
-            y: Math.random() - 0.5
+            x: 0,
+            y: 0
           }
-
-          this.mass = 1;
-
-          this.radius = radius
-          this.color = color
-
-          if (proccess === false) {
-            this.velocity = {
-              x: 0,
-              y: 0
-            }
-            return
+          return
+        }
+        for (let i = 0; i < particles.length; i++) {
+          if (this === particles[i]) continue;
+          if (distance(this.x, this.y, particles[i].x, particles[i].y) - this.radius * 2 < 2) {
+            resolveCollision(this, particles[i])
           }
-
-          this.update = function(){
-            this.draw();
-
-            if (proccess === false) {
-              this.velocity = {
-                x: 0,
-                y: 0
-              }
-              return
-            }
-
-            for (let i = 0; i < particles.length; i++) {
-              if(this === particles[i]) continue;
-              if(distance(this.x, this.y, particles[i].x, particles[i].y) - this.radius * 2 < 2){
-                  resolveCollision(this, particles[i])
-                }
-              }
-
-              if (this.x - this.radius <= 0 || this.x + this.radius >= width) {
-                this.velocity.x = -this.velocity.x;
-              }
-
-              if (this.y - this.radius <= 0 || this.y + this.radius >= height / 2) {
-                this.velocity.y = -this.velocity.y;
-              }
-
-              this.x += this.velocity.x
-              this.y += this.velocity.y
-
-
-            for (let i = 0; i < particles.length; i++) {
-              if(this === particles[i]) continue;
-              if(distance(this.x, this.y, BallX, BallY) - this.radius <  1 / 2){
-                  this.x += width * 2;
-                  score++
-                  BallYSpeed = -BallYSpeed;
-                }
-              }
-            }
-
-          this.draw = function(){
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
-            ctx.fillStyle = this.color;
-            ctx.fill()
-            ctx.closePath()
+        }
+        if (this.x - this.radius <= 0 || this.x + this.radius >= width) {
+          this.velocity.x = -this.velocity.x;
+        }
+        if (this.y - this.radius <= 0 || this.y + this.radius >= height / 2) {
+          this.velocity.y = -this.velocity.y;
+        }
+        this.x += this.velocity.x
+        this.y += this.velocity.y
+        for (let i = 0; i < particles.length; i++) {
+          if (this === particles[i]) continue;
+          if (distance(this.x, this.y, BallX, BallY) - this.radius < 1 / 2) {
+            this.x += width * 2;
+            score++
+            BallYSpeed = -BallYSpeed;
           }
+        }
       }
-
-      let particles
-      function init() {
-          particles = []
-
-          for (let i = 0; i < 10; i++) {
-            if (i === 10) {
-              gameWin();
+      this.draw = function () {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
+        ctx.fillStyle = this.color;
+        ctx.fill()
+        ctx.closePath()
+      }
+    }
+    let particles
+    function init() {
+      particles = []
+      for (let i = 0; i < 10; i++) {
+        if (i === 10) {
+          gameWin();
+        }
+        const radius = 10;
+        let x = randomIntFromRange(radius, width - radius);
+        let y = randomIntFromRange(radius, height / 2 - radius);
+        const color = randomColor(colors);
+        if (i !== 0) {
+          for (var j = 0; j < particles.length; j++) {
+            if (distance(x, y, particles[j].x, particles[j].y) - radius * 2 < 2) {
+              x = randomIntFromRange(radius, width - radius);
+              y = randomIntFromRange(radius, height / 2 - radius)
+              j = -1
             }
-            const radius = 10;
-            let x = randomIntFromRange(radius, width- radius);
-            let y = randomIntFromRange(radius, height / 2 - radius);
-            const color = randomColor(colors);
-
-            if (i !== 0){
-              for (var j = 0; j < particles.length; j++) {
-                if(distance(x, y, particles[j].x, particles[j].y) - radius * 2 < 2){
-                  x = randomIntFromRange(radius, width - radius);
-                  y = randomIntFromRange(radius, height / 2 - radius)
-
-                  j = -1
-                }
-              }
-            }
-              particles.push(new Particle(x, y, radius, color))
           }
+        }
+        particles.push(new Particle(x, y, radius, color))
       }
-
-      function animate() {
-          requestAnimationFrame(animate)
-
-          particles.forEach(particle => {
-           particle.update(particles)
-          })
-      }
-
-
-      var gameOver = function () {
-        proccess = false
-        ctx.font = "40px Courier";
-        ctx.fillStyle = "Black";
-        ctx.textAllign = "center";
-        ctx.textBaseLine = "middle";
-        ctx.fillText("Game Over " + score, width / 4 , height / 2);
-      }
-
-      var ball = new Ball();
-
-      var block = new Block();
-
-      var proccess = true;
-
-      var gameLoop = function(){
-        ctx.clearRect(0, 0, width, height);
-        drawBorder()
-        block.move();
-        ball.move();
-        block.draw();
-        ball.draw();
-        drawScore();
-        ball.checkCollisionBorders();
-        ball.checkCollisionBlock()
-        timeoutId()
-      }
-      init()
-      animate()
-
-      gameLoop()
-
-
-      $("body").keydown(function (event){
-        direction = keyActions[event.keyCode]
+    }
+    function animate() {
+      requestAnimationFrame(animate)
+      particles.forEach(particle => {
+        particle.update(particles)
       })
+    }
+    var gameOver = function () {
+      proccess = false
+      ctx.font = "40px Courier";
+      ctx.fillStyle = "Black";
+      ctx.textAllign = "center";
+      ctx.textBaseLine = "middle";
+      ctx.fillText("Game Over " + score, width / 4, height / 2);
+    }
+    var ball = new Ball();
+    var block = new Block();
+    var proccess = true;
+    var gameLoop = function () {
+      ctx.clearRect(0, 0, width, height);
+      drawBorder()
+      block.move();
+      ball.move();
+      block.draw();
+      ball.draw();
+      drawScore();
+      ball.checkCollisionBorders();
+      ball.checkCollisionBlock()
+      timeoutId()
+    }
+    init()
+    animate()
+    gameLoop()
+    $("body").keydown(function (event) {
+      direction = keyActions[event.keyCode]
+    })
+    $("#but1").click(moveSensor1)
+    $("#but2").click(moveSensor2)
+    var keyActions = {
+      37: 1,
+      39: 2
+    };
+  </script>
+</body>
 
-      // $("#but1").click(moveSensor1)
-      // $("#but2").click(moveSensor2)
-
-      var keyActions = {
-        37: 1,
-        39: 2
-      };
-    </script>
-  </body>
 </html>
