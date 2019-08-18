@@ -10,10 +10,8 @@
     <canvas id="canvas" width="400" height="400"></canvas>
     <div class="but">
       <div id="but1" onmousedown="mouseDown1()" onmouseup = "mouseUp()" class="but1">
-        <p>right</p>
       </div>
       <div id="but2" onmousedown="mouseDown2()" onmouseup = "mouseUp()" class="but1">
-        <p>left</p>
       </div>
     </div>
     <script src="https://code.jquery.com/jquery-2.1.0.js"></script>
@@ -37,8 +35,8 @@
       var Ball = function (){
         BallX = 170;
         BallY = 300;
-        BallXSpeed = 1;
-        BallYSpeed = 2;
+        BallXSpeed = 0;
+        BallYSpeed = 0;
       }
 
       var Block = function() {
